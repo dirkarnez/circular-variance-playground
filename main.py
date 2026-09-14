@@ -65,12 +65,9 @@ class StreamingCircVar:
 
 def main():
     s=StreamingCircVar(high=np.pi, low=-np.pi)
-    s.update(1)
-    print(f"{s.get_variance()}---vs----{circvar(np.array([1]), high=np.pi, low=-np.pi)}")
-    s.update(1)
-    print(f"{s.get_variance()}---vs----{circvar(np.array([1, 1]), high=np.pi, low=-np.pi)}")
-    s.update(1)
-    print(f"{s.get_variance()}---vs----{circvar(np.array([1, 1, 1]), high=np.pi, low=-np.pi)}")
+    print(f"{s.update(1)}---vs----{circvar(np.array([1]), high=np.pi, low=-np.pi)}")
+    print(f"{s.update(1)}---vs----{circvar(np.array([1, 1]), high=np.pi, low=-np.pi)}")
+    print(f"{s.update(1)}---vs----{circvar(np.array([1, 1, 1]), high=np.pi, low=-np.pi)}")
 
 if __name__ == "__main__":
     main()
