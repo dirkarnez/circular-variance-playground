@@ -23,7 +23,7 @@ class StreamingCircVar:
     def update(self, x):
         """Add a single new data point and return the current circular variance."""
         # 1. Map input to radians [0, 2*pi] matching scipy's internal normalization
-        t = (x - self.low) * (2.0 * math.pi) / self.bounds_range
+        t = x * ((2.0 * math.pi) / self.bounds_range)
         
         # 2. Update streaming state
         self.n += 1
@@ -36,12 +36,41 @@ class StreamingCircVar:
     def get_variance(self):
         if self.n == 0:
             return float('nan')
+
+        # def circvar()
+        #     period = high - low
+        #     scaled_samples = samples * ((2.0 * pi) / period)
+        #     sin_samp = xp.sin(scaled_samples)
+        #     cos_samp = xp.cos(scaled_samples)
+
+        #     sin_mean = xp.mean(sin_samp, axis=axis)
+        #     cos_mean = xp.mean(cos_samp, axis=axis)
+        #     hypotenuse = (sin_mean**2. + cos_mean**2.)**0.5
+        #     # hypotenuse can go slightly above 1 due to rounding errors
+        #     R = xp.clip(hypotenuse, max=1.)
+        #     res = 1. - R
         
-        # Mean resultant vector length (R_bar)
-        r_bar = math.sqrt(self.sum_sin**2 + self.sum_cos**2) / self.n
+        # 1. 100% 對齊 SciPy 的平均值做法
+        sin_mean = self.sum_sin / self.n
+        cos_mean = self.sum_cos / self.n
         
-        # Guarantee floating point accuracy bounds
-        r_bar = min(r_bar, 1.0)
+        # 2. 100% 對齊 SciPy 的開根號寫法 (不用 math.sqrt 或 math.hypot)
+        hypotenuse = (sin_mean**2.0 + cos_mean**2.0)**0.5
         
-        # Circular variance formula used by SciPy
-        return 1.0 - r_bar
+        # 3. 100% 對齊 SciPy 的 xp.clip(..., max=1.)
+        # 雖然你的 min(r_bar, 1.0) 邏輯相同，但這樣寫與源碼語意完全一致
+        R = min(hypotenuse, 1.0)
+        
+        return 1.0 - R
+
+def main():
+    s=StreamingCircVar(high=np.pi, low=-np.pi)
+    s.update(1)
+    print(f"{s.get_variance()}---vs----{circvar(np.array([1]), high=np.pi, low=-np.pi)}")
+    s.update(1)
+    print(f"{s.get_variance()}---vs----{circvar(np.array([1, 1]), high=np.pi, low=-np.pi)}")
+    s.update(1)
+    print(f"{s.get_variance()}---vs----{circvar(np.array([1, 1, 1]), high=np.pi, low=-np.pi)}")
+
+if __name__ == "__main__":
+    main()
